@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Document {
+  id           String       @id
+  enrollmentId String
+  type         DocumentType
+  fileName     String
+  fileSize     Int
+  fileUrl      String
+  mimeType     String
+  uploadedAt   DateTime     @default(now())
+  Enrollment   Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId])
+}
+
+model Enrollment {
+  id                             String                        @id
+  userId                         String?
+  schoolYear                     String
+  program                        String
+  studentStatus                  StudentStatus
+  status                         EnrollmentStatus              @default(PENDING)
+  lastName                       String
+  firstName                      String
+  middleName                     String
+  nameExtension                  String?
+  nickname                       String
+  sex                            Sex
+  age                            Int
+  birthday                       DateTime
+  placeOfBirth                   String
+  religion                       String
+  presentAddress                 String
+  contactNumber                  String
+  citizenship                    Citizenship
+  citizenshipSpecification       String?
+  fatherFullName                 String
+  fatherOccupation               String?
+  fatherContactNumber            String
+  fatherEmail                    String?
+  fatherEducationalAttainment    EducationalAttainment
+  motherFullName                 String
+  motherOccupation               String?
+  motherContactNumber            String
+  motherEmail                    String
+  motherEducationalAttainment    EducationalAttainment
+  maritalStatus                  MaritalStatus[]
+  siblingsInformation            String?
+  totalLearnersInHousehold       Int
+  lastSchoolPreschoolName        String
+  lastSchoolPreschoolAddress     String?
+  lastSchoolElementaryName       String
+  lastSchoolElementaryAddress    String?
+  specialSkills                  SpecialSkill[]
+  specialNeedsDiagnosis          String?
+  responsiblePersonName          String
+  responsiblePersonContactNumber String
+  responsiblePersonEmail         String
+  relationshipToStudent          String?
+  enrollmentAgreementAcceptance  EnrollmentAgreementAcceptance
+  withdrawalPolicyAcceptance     WithdrawalPolicyAcceptance
+  profilePictureUrl              String
+  createdAt                      DateTime                      @default(now())
+  updatedAt                      DateTime
+  Document                       Document[]
+  User                           User?                         @relation(fields: [userId], references: [id])
+  Student                        Student?
+
+  @@index([schoolYear])
+  @@index([status])
+  @@index([studentStatus])
+  @@index([userId])
+}
+
+model User {
+  id         String       @id
+  email      String       @unique
+  name       String
+  password   String
+  role       Role
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Enrollment Enrollment[]
+}
+
+model Teacher {
+  id          String   @id
+  name        String
+  email       String   @unique
+  phone       String
+  address     String
+  subject     String
+  class       String
+  employeeId  String   @unique
+  profileUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Class       Class[]  @relation("ClassTeacher")
+
+  @@index([employeeId])
+  @@index([subject])
+}
+
+model Student {
+  id                String                 @id
+  studentId         String                 @unique
+  enrollmentId      String                 @unique
+  classId           String?
+  status            StudentEnrollmentStatus @default(ACTIVE)
+  admissionDate     DateTime               @default(now())
+  
+  // Personal Information (from enrollment)
+  firstName         String
+  lastName          String
+  middleName        String
+  nameExtension     String?
+  nickname          String
+  sex               Sex
+  age               Int
+  birthday          DateTime
+  placeOfBirth      String
+  religion          String
+  presentAddress    String
+  contactNumber     String
+  citizenship       Citizenship
+  profilePictureUrl String
+  
+  // Parent Information
+  fatherFullName    String
+  fatherContactNumber String
+  fatherEmail       String?
+  motherFullName    String
+  motherContactNumber String
+  motherEmail       String
+  
+  // Academic
+  program           String
+  schoolYear        String
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  Enrollment        Enrollment    @relation(fields: [enrollmentId], references: [id])
+  Class             Class?        @relation(fields: [classId], references: [id])
+
+  @@index([studentId])
+  @@index([classId])
+  @@index([status])
+}
+
+model Class {
+  id              String    @id
+  name            String
+  program         String
+  schoolYear      String
+  section         String?
+  capacity        Int       @default(30)
+  teacherId       String?
+  roomNumber      String?
+  schedule        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  Teacher         Teacher?  @relation("ClassTeacher", fields: [teacherId], references: [id])
+  Students        Student[]
+
+  @@unique([name, schoolYear])
+  @@index([program])
+  @@index([schoolYear])
+}
+
+enum StudentEnrollmentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  TRANSFERRED
+  WITHDRAWN
+}
+
+enum Citizenship {
+  FILIPINO
+  FOREIGNER
+}
+
+enum DocumentType {
+  REPORT_CARD
+  BIRTH_CERTIFICATE
+  GOOD_MORAL
+  MARRIAGE_CONTRACT
+  MEDICAL_RECORDS
+  SPECIAL_NEEDS_DIAGNOSIS
+  PROOF_OF_PAYMENT
+}
+
+enum EducationalAttainment {
+  ELEMENTARY_GRADUATE
+  HIGH_SCHOOL_GRADUATE
+  COLLEGE_GRADUATE
+  ELEMENTARY_UNDERGRAD
+  HIGH_SCHOOL_UNDERGRAD
+  COLLEGE_UNDERGRAD
+  OTHERS
+}
+
+enum EnrollmentAgreementAcceptance {
+  YES_COMMIT
+  OTHER
+}
+
+enum EnrollmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MaritalStatus {
+  MARRIED
+  SEPARATED
+  SINGLE_PARENT
+  STEPMOTHER
+  STEPFATHER
+  OTHER
+}
+
+enum Role {
+  PARENT
+  ADMIN
+  PRINCIPAL
+}
+
+enum Sex {
+  FEMALE
+  MALE
+}
+
+enum SpecialSkill {
+  COMPUTER
+  COMPOSITION_WRITING
+  SINGING
+  DANCING
+  POEM_WRITING
+  COOKING
+  ACTING
+  PUBLIC_SPEAKING
+  OTHER
+}
+
+enum StudentStatus {
+  OLD_STUDENT
+  NEW_STUDENT
+}
+
+enum WithdrawalPolicyAcceptance {
+  YES_AGREED
+  NO_DISAGREE
+}
