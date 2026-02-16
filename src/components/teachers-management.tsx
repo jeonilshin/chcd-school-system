@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   Table,
   TableBody,
@@ -34,6 +35,7 @@ interface Teacher {
 }
 
 export function TeachersManagement() {
+  const { buttonClasses } = useThemeColor();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -248,7 +250,7 @@ export function TeachersManagement() {
                   <CardTitle>Teachers Information</CardTitle>
                   <CardDescription>Manage all teacher records</CardDescription>
                 </div>
-                <Button onClick={handleAddTeacher} className="bg-purple-600 hover:bg-purple-700">
+                <Button onClick={handleAddTeacher} className={buttonClasses}>
                   Add New Teacher
                 </Button>
               </div>

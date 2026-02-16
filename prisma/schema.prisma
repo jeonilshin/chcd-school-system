@@ -178,6 +178,15 @@ model Class {
   @@index([schoolYear])
 }
 
+model SchoolSettings {
+  id              String   @id @default("default")
+  schoolName      String   @default("School")
+  schoolLogoUrl   String?
+  primaryColor    String   @default("#3B82F6")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 enum StudentEnrollmentStatus {
   ACTIVE
   INACTIVE

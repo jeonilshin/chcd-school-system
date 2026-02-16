@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { formatProgram } from '@/lib/format-program';
 import {
   Table,
   TableBody,
@@ -234,7 +235,7 @@ export function StudentsList() {
                           <TableCell>
                             {student.firstName} {student.middleName.charAt(0)}. {student.lastName}
                           </TableCell>
-                          <TableCell>{student.program}</TableCell>
+                          <TableCell>{formatProgram(student.program)}</TableCell>
                           <TableCell>
                             {student.Class ? (
                               <span>

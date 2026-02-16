@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { formatProgram } from '@/lib/format-program';
 
 type EnrollmentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 type StudentStatus = 'OLD_STUDENT' | 'NEW_STUDENT';
@@ -302,7 +303,7 @@ export function AdminDashboard({ userRole }: AdminDashboardProps) {
                         {enrollment.studentName}
                       </TableCell>
                       <TableCell>{enrollment.schoolYear}</TableCell>
-                      <TableCell>{enrollment.program}</TableCell>
+                      <TableCell>{formatProgram(enrollment.program)}</TableCell>
                       <TableCell>{formatStudentStatus(enrollment.studentStatus)}</TableCell>
                       <TableCell>{getStatusBadge(enrollment.status)}</TableCell>
                       <TableCell>{formatDate(enrollment.submittedAt)}</TableCell>

@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatProgram } from '@/lib/format-program';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   Table,
   TableBody,
@@ -46,6 +48,7 @@ interface Class {
 }
 
 export function AdmissionsList() {
+  const { buttonClasses } = useThemeColor();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -197,7 +200,7 @@ export function AdmissionsList() {
                           <TableCell className="font-medium">
                             {enrollment.firstName} {enrollment.middleName.charAt(0)}. {enrollment.lastName}
                           </TableCell>
-                          <TableCell>{enrollment.program}</TableCell>
+                          <TableCell>{formatProgram(enrollment.program)}</TableCell>
                           <TableCell>{enrollment.schoolYear}</TableCell>
                           <TableCell>
                             {enrollment.studentStatus === 'NEW_STUDENT' ? 'New' : 'Old'}
@@ -210,7 +213,7 @@ export function AdmissionsList() {
                             <Button
                               size="sm"
                               onClick={() => handleAdmitClick(enrollment)}
-                              className="bg-purple-600 hover:bg-purple-700"
+                              className={buttonClasses}
                             >
                               Admit Student
                             </Button>
@@ -278,7 +281,7 @@ export function AdmissionsList() {
                 <Button
                   onClick={handleAdmit}
                   disabled={isAdmitting}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className={buttonClasses}
                 >
                   {isAdmitting ? 'Admitting...' : 'Admit Student'}
                 </Button>

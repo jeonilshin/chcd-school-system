@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   Table,
   TableBody,
@@ -45,6 +46,7 @@ interface Teacher {
 }
 
 export function ClassesList() {
+  const { buttonClasses } = useThemeColor();
   const [classes, setClasses] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -174,7 +176,7 @@ export function ClassesList() {
                 </div>
                 <Button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className={buttonClasses}
                 >
                   Create New Class
                 </Button>
@@ -358,7 +360,7 @@ export function ClassesList() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+                  <Button type="submit" className={buttonClasses}>
                     Create Class
                   </Button>
                 </div>

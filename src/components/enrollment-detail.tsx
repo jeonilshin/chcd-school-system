@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatProgram } from '@/lib/format-program';
 import type {
   StudentStatus,
   EducationalAttainment,
@@ -322,7 +323,7 @@ export function EnrollmentDetail({ enrollmentId, onApprove, onReject }: Enrollme
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Program</p>
-            <p className="text-base">{enrollment.program}</p>
+            <p className="text-base">{formatProgram(enrollment.program)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Student Status</p>
