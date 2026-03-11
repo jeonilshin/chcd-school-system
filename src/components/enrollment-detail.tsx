@@ -127,6 +127,35 @@ export function EnrollmentDetail({ enrollmentId, onApprove, onReject }: Enrollme
     }
   };
 
+  const handleResetToPending = async () => {
+    if (!enrollment) return;
+    
+    if (!confirm('Are you sure you want to reset this enrollment to PENDING status?')) {
+      return;
+    }
+    
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/api/enrollments/${enrollment.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'PENDING' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to reset enrollment status');
+      }
+
+      await fetchEnrollmentDetail(); // Refresh data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset enrollment status');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getStatusBadge = (status: EnrollmentStatus) => {
     switch (status) {
       case 'PENDING':
@@ -279,7 +308,7 @@ export function EnrollmentDetail({ enrollmentId, onApprove, onReject }: Enrollme
           </div>
           <div className="flex items-center gap-4">
             {getStatusBadge(enrollment.status)}
-            {enrollment.status === 'PENDING' && (
+            {enrollment.status === 'PENDING' ? (
               <div className="flex gap-2">
                 <Button
                   onClick={handleApprove}
@@ -302,6 +331,18 @@ export function EnrollmentDetail({ enrollmentId, onApprove, onReject }: Enrollme
                   Reject
                 </Button>
               </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleResetToPending}
+                disabled={isUpdating}
+                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset to Pending
+              </Button>
             )}
           </div>
         </div>

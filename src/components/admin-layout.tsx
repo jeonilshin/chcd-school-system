@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useSchoolSettings } from '@/contexts/school-settings-context';
 
 interface AdminLayoutProps {
@@ -17,6 +17,27 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const isPrincipal = session?.user?.role === 'PRINCIPAL';
   const { settings } = useSchoolSettings();
+  const [pendingEnrollments, setPendingEnrollments] = useState(0);
+
+  useEffect(() => {
+    // Fetch pending enrollments count
+    const fetchPendingCount = async () => {
+      try {
+        const response = await fetch('/api/enrollments?status=PENDING');
+        if (response.ok) {
+          const data = await response.json();
+          setPendingEnrollments(data.enrollments?.length || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending enrollments:', error);
+      }
+    };
+
+    fetchPendingCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -120,6 +141,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 All Students
               </Link>
               <Link
+                href="/admin/enrollments"
+                className={`flex items-center justify-between gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+                  isActive('/admin/enrollments')
+                    ? `${getActiveBgClass()} ${getColorClasses('text')}`
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <span>Enrollments</span>
+                {pendingEnrollments > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {pendingEnrollments}
+                  </span>
+                )}
+              </Link>
+              <Link
                 href="/admin/admissions"
                 className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
                   isActive('/admin/admissions')
@@ -135,32 +171,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {/* Teachers Section - Only for Principal */}
           {isPrincipal && (
             <div className="mb-4">
-              <div className={`flex items-center justify-between px-4 py-2 ${getColorClasses('text')} text-sm font-medium cursor-pointer`}>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <Link href="/principal/teachers">
+                <div className={`flex items-center justify-between px-4 py-2 text-sm font-medium cursor-pointer rounded-lg transition-colors ${
+                  isActive('/principal/teachers')
+                    ? `${getActiveBgClass()} ${getColorClasses('text')}`
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Teachers</span>
+                  </div>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  <span>Teachers</span>
                 </div>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-              <div className="ml-4 mt-1 space-y-1">
-                <Link
-                  href="/principal/teachers"
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
-                    isActive('/principal/teachers')
-                      ? `${getActiveBgClass()} ${getColorClasses('text')}`
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  All Teachers
-                </Link>
-                <div className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-gray-400 cursor-not-allowed">
-                  Teachers Details
-                </div>
-              </div>
+              </Link>
             </div>
           )}
 
@@ -178,6 +205,45 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               <span className="font-medium">Classes</span>
+            </Link>
+            <Link
+              href="/admin/attendance"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive('/admin/attendance')
+                  ? `${getActiveBgClass()} ${getColorClasses('text')}`
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <span className="font-medium">Attendance</span>
+            </Link>
+            <Link
+              href="/admin/grades"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive('/admin/grades')
+                  ? `${getActiveBgClass()} ${getColorClasses('text')}`
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="font-medium">Grades</span>
+            </Link>
+            <Link
+              href="/admin/announcements"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive('/admin/announcements')
+                  ? `${getActiveBgClass()} ${getColorClasses('text')}`
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+              </svg>
+              <span className="font-medium">Announcements</span>
             </Link>
             <div className="flex items-center gap-3 px-4 py-3 text-gray-400 cursor-not-allowed rounded-lg">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,8 +304,31 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {children}
+      <main className="flex-1 overflow-auto flex flex-col">
+        {/* Notification Banner */}
+        {pendingEnrollments > 0 && (
+          <div className="bg-orange-500 text-white px-6 py-3 flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+              </svg>
+              <span className="font-medium">
+                You have {pendingEnrollments} new enrollment{pendingEnrollments > 1 ? 's' : ''} waiting for review
+              </span>
+            </div>
+            <Link
+              href="/admin/enrollments"
+              className="bg-white text-orange-600 px-4 py-1.5 rounded-md text-sm font-medium hover:bg-orange-50 transition-colors"
+            >
+              View Now
+            </Link>
+          </div>
+        )}
+        
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

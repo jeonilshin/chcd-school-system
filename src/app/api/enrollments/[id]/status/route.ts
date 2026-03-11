@@ -22,10 +22,10 @@ export async function PATCH(
     const { status } = body;
 
     // Validate status value
-    if (!status || (status !== 'APPROVED' && status !== 'REJECTED')) {
+    if (!status || !['APPROVED', 'REJECTED', 'PENDING'].includes(status)) {
       return NextResponse.json(
         {
-          error: 'Invalid status. Must be APPROVED or REJECTED.',
+          error: 'Invalid status. Must be APPROVED, REJECTED, or PENDING.',
         },
         { status: 400 }
       );

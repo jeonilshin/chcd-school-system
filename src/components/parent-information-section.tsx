@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type EducationalAttainment = 
   | 'ELEMENTARY_GRADUATE'
@@ -23,16 +25,23 @@ type MaritalStatus =
   | 'STEPFATHER'
   | 'OTHER';
 
+type ParentAvailability = 'BOTH' | 'FATHER_ONLY' | 'MOTHER_ONLY' | 'SINGLE_PARENT';
+
 interface ParentInfo {
+  parentAvailability?: ParentAvailability;
   fatherFullName: string;
   fatherOccupation?: string;
   fatherContactNumber: string;
   fatherEmail?: string;
+  fatherHasEmail?: boolean;
+  fatherHasContactNumber?: boolean;
   fatherEducationalAttainment: EducationalAttainment | '';
   motherFullName: string;
   motherOccupation?: string;
   motherContactNumber: string;
   motherEmail: string;
+  motherHasEmail?: boolean;
+  motherHasContactNumber?: boolean;
   motherEducationalAttainment: EducationalAttainment | '';
   maritalStatus: MaritalStatus[];
 }
@@ -63,6 +72,11 @@ const MARITAL_STATUS_OPTIONS: { value: MaritalStatus; label: string }[] = [
 ];
 
 export function ParentInformationSection({ parentInfo, onUpdate, errors }: ParentInformationSectionProps) {
+  const [showFatherEmail, setShowFatherEmail] = useState(parentInfo.fatherHasEmail !== false);
+  const [showFatherContact, setShowFatherContact] = useState(parentInfo.fatherHasContactNumber !== false);
+  const [showMotherEmail, setShowMotherEmail] = useState(parentInfo.motherHasEmail !== false);
+  const [showMotherContact, setShowMotherContact] = useState(parentInfo.motherHasContactNumber !== false);
+
   const toggleMaritalStatus = (status: MaritalStatus) => {
     const current = parentInfo.maritalStatus;
     const updated = current.includes(status)
@@ -71,6 +85,19 @@ export function ParentInformationSection({ parentInfo, onUpdate, errors }: Paren
     onUpdate('maritalStatus', updated);
   };
 
+  const handleParentAvailabilityChange = (value: ParentAvailability) => {
+    onUpdate('parentAvailability', value);
+  };
+
+  const shouldShowFather = !parentInfo.parentAvailability || 
+    parentInfo.parentAvailability === 'BOTH' || 
+    parentInfo.parentAvailability === 'FATHER_ONLY';
+
+  const shouldShowMother = !parentInfo.parentAvailability || 
+    parentInfo.parentAvailability === 'BOTH' || 
+    parentInfo.parentAvailability === 'MOTHER_ONLY' ||
+    parentInfo.parentAvailability === 'SINGLE_PARENT';
+
   return (
     <Card>
       <CardHeader>
@@ -78,159 +105,281 @@ export function ParentInformationSection({ parentInfo, onUpdate, errors }: Paren
         <CardDescription>Father and mother details</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Father Information */}
+        {/* Parent Availability Selection */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-lg border-b pb-2">Father's Information</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fatherFullName">Full Name *</Label>
-              <Input
-                id="fatherFullName"
-                value={parentInfo.fatherFullName}
-                onChange={(e) => onUpdate('fatherFullName', e.target.value)}
-              />
-              {errors['parentInfo.fatherFullName'] && (
-                <p className="text-sm text-red-500">{errors['parentInfo.fatherFullName']}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fatherOccupation">Occupation</Label>
-              <Input
-                id="fatherOccupation"
-                value={parentInfo.fatherOccupation || ''}
-                onChange={(e) => onUpdate('fatherOccupation', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fatherContactNumber">Contact Number *</Label>
-              <Input
-                id="fatherContactNumber"
-                value={parentInfo.fatherContactNumber}
-                onChange={(e) => onUpdate('fatherContactNumber', e.target.value)}
-                placeholder="+63 XXX XXX XXXX"
-              />
-              {errors['parentInfo.fatherContactNumber'] && (
-                <p className="text-sm text-red-500">{errors['parentInfo.fatherContactNumber']}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fatherEmail">Email Address</Label>
-              <Input
-                id="fatherEmail"
-                type="email"
-                value={parentInfo.fatherEmail || ''}
-                onChange={(e) => onUpdate('fatherEmail', e.target.value)}
-                placeholder="father@example.com"
-              />
-              {errors['parentInfo.fatherEmail'] && (
-                <p className="text-sm text-red-500">{errors['parentInfo.fatherEmail']}</p>
-              )}
-            </div>
-          </div>
-
+          <h3 className="font-semibold text-lg border-b pb-2">Parent Availability</h3>
           <div className="space-y-2">
-            <Label>Highest Educational Attainment *</Label>
-            <RadioGroup
-              value={parentInfo.fatherEducationalAttainment}
-              onValueChange={(value) => onUpdate('fatherEducationalAttainment', value)}
+            <Label>Which parent(s) are available? *</Label>
+            <Select
+              value={parentInfo.parentAvailability || ''}
+              onValueChange={handleParentAvailabilityChange}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {EDUCATIONAL_ATTAINMENT_OPTIONS.map((option) => (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.value} id={`father-${option.value}`} />
-                    <Label htmlFor={`father-${option.value}`} className="font-normal cursor-pointer">
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </RadioGroup>
-            {errors['parentInfo.fatherEducationalAttainment'] && (
-              <p className="text-sm text-red-500">{errors['parentInfo.fatherEducationalAttainment']}</p>
-            )}
+              <SelectTrigger>
+                <SelectValue placeholder="Select parent availability" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BOTH">Both Parents</SelectItem>
+                <SelectItem value="FATHER_ONLY">Father Only</SelectItem>
+                <SelectItem value="MOTHER_ONLY">Mother Only</SelectItem>
+                <SelectItem value="SINGLE_PARENT">Single Parent</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
+
+        {/* Father Information */}
+        {shouldShowFather && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg border-b pb-2">Father's Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="fatherFullName">Full Name *</Label>
+                <Input
+                  id="fatherFullName"
+                  value={parentInfo.fatherFullName}
+                  onChange={(e) => onUpdate('fatherFullName', e.target.value)}
+                />
+                {errors['parentInfo.fatherFullName'] && (
+                  <p className="text-sm text-red-500">{errors['parentInfo.fatherFullName']}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fatherOccupation">Occupation</Label>
+                <Input
+                  id="fatherOccupation"
+                  value={parentInfo.fatherOccupation || ''}
+                  onChange={(e) => onUpdate('fatherOccupation', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="fatherContactNumber">Contact Number {showFatherContact && '*'}</Label>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="fatherNoContact"
+                      checked={!showFatherContact}
+                      onCheckedChange={(checked) => {
+                        setShowFatherContact(!checked);
+                        onUpdate('fatherHasContactNumber', !checked);
+                        if (checked) onUpdate('fatherContactNumber', 'N/A');
+                      }}
+                    />
+                    <Label htmlFor="fatherNoContact" className="text-sm font-normal cursor-pointer">
+                      Not Available
+                    </Label>
+                  </div>
+                </div>
+                {showFatherContact ? (
+                  <Input
+                    id="fatherContactNumber"
+                    value={parentInfo.fatherContactNumber}
+                    onChange={(e) => onUpdate('fatherContactNumber', e.target.value)}
+                    placeholder="+63 XXX XXX XXXX"
+                  />
+                ) : (
+                  <Input
+                    value="Not Available"
+                    disabled
+                    className="bg-gray-100"
+                  />
+                )}
+                {errors['parentInfo.fatherContactNumber'] && (
+                  <p className="text-sm text-red-500">{errors['parentInfo.fatherContactNumber']}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="fatherEmail">Email Address</Label>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="fatherNoEmail"
+                      checked={!showFatherEmail}
+                      onCheckedChange={(checked) => {
+                        setShowFatherEmail(!checked);
+                        onUpdate('fatherHasEmail', !checked);
+                        if (checked) onUpdate('fatherEmail', 'N/A');
+                      }}
+                    />
+                    <Label htmlFor="fatherNoEmail" className="text-sm font-normal cursor-pointer">
+                      No Email
+                    </Label>
+                  </div>
+                </div>
+                {showFatherEmail ? (
+                  <Input
+                    id="fatherEmail"
+                    type="email"
+                    value={parentInfo.fatherEmail || ''}
+                    onChange={(e) => onUpdate('fatherEmail', e.target.value)}
+                    placeholder="father@example.com"
+                  />
+                ) : (
+                  <Input
+                    value="No Email"
+                    disabled
+                    className="bg-gray-100"
+                  />
+                )}
+                {errors['parentInfo.fatherEmail'] && (
+                  <p className="text-sm text-red-500">{errors['parentInfo.fatherEmail']}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Highest Educational Attainment *</Label>
+              <RadioGroup
+                value={parentInfo.fatherEducationalAttainment}
+                onValueChange={(value) => onUpdate('fatherEducationalAttainment', value)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {EDUCATIONAL_ATTAINMENT_OPTIONS.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`father-${option.value}`} />
+                      <Label htmlFor={`father-${option.value}`} className="font-normal cursor-pointer">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+              {errors['parentInfo.fatherEducationalAttainment'] && (
+                <p className="text-sm text-red-500">{errors['parentInfo.fatherEducationalAttainment']}</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Mother Information */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg border-b pb-2">Mother's Information</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="motherFullName">Full Name *</Label>
-              <Input
-                id="motherFullName"
-                value={parentInfo.motherFullName}
-                onChange={(e) => onUpdate('motherFullName', e.target.value)}
-              />
-              {errors['parentInfo.motherFullName'] && (
-                <p className="text-sm text-red-500">{errors['parentInfo.motherFullName']}</p>
-              )}
-            </div>
+        {shouldShowMother && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg border-b pb-2">Mother's Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="motherFullName">Full Name *</Label>
+                <Input
+                  id="motherFullName"
+                  value={parentInfo.motherFullName}
+                  onChange={(e) => onUpdate('motherFullName', e.target.value)}
+                />
+                {errors['parentInfo.motherFullName'] && (
+                  <p className="text-sm text-red-500">{errors['parentInfo.motherFullName']}</p>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="motherOccupation">Occupation</Label>
-              <Input
-                id="motherOccupation"
-                value={parentInfo.motherOccupation || ''}
-                onChange={(e) => onUpdate('motherOccupation', e.target.value)}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="motherOccupation">Occupation</Label>
+                <Input
+                  id="motherOccupation"
+                  value={parentInfo.motherOccupation || ''}
+                  onChange={(e) => onUpdate('motherOccupation', e.target.value)}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="motherContactNumber">Contact Number *</Label>
-              <Input
-                id="motherContactNumber"
-                value={parentInfo.motherContactNumber}
-                onChange={(e) => onUpdate('motherContactNumber', e.target.value)}
-                placeholder="+63 XXX XXX XXXX"
-              />
-              {errors['parentInfo.motherContactNumber'] && (
-                <p className="text-sm text-red-500">{errors['parentInfo.motherContactNumber']}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="motherEmail">Email Address *</Label>
-              <Input
-                id="motherEmail"
-                type="email"
-                value={parentInfo.motherEmail}
-                onChange={(e) => onUpdate('motherEmail', e.target.value)}
-                placeholder="mother@example.com"
-              />
-              {errors['parentInfo.motherEmail'] && (
-                <p className="text-sm text-red-500">{errors['parentInfo.motherEmail']}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Highest Educational Attainment *</Label>
-            <RadioGroup
-              value={parentInfo.motherEducationalAttainment}
-              onValueChange={(value) => onUpdate('motherEducationalAttainment', value)}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {EDUCATIONAL_ATTAINMENT_OPTIONS.map((option) => (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.value} id={`mother-${option.value}`} />
-                    <Label htmlFor={`mother-${option.value}`} className="font-normal cursor-pointer">
-                      {option.label}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="motherContactNumber">Contact Number {showMotherContact && '*'}</Label>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="motherNoContact"
+                      checked={!showMotherContact}
+                      onCheckedChange={(checked) => {
+                        setShowMotherContact(!checked);
+                        onUpdate('motherHasContactNumber', !checked);
+                        if (checked) onUpdate('motherContactNumber', 'N/A');
+                      }}
+                    />
+                    <Label htmlFor="motherNoContact" className="text-sm font-normal cursor-pointer">
+                      Not Available
                     </Label>
                   </div>
-                ))}
+                </div>
+                {showMotherContact ? (
+                  <Input
+                    id="motherContactNumber"
+                    value={parentInfo.motherContactNumber}
+                    onChange={(e) => onUpdate('motherContactNumber', e.target.value)}
+                    placeholder="+63 XXX XXX XXXX"
+                  />
+                ) : (
+                  <Input
+                    value="Not Available"
+                    disabled
+                    className="bg-gray-100"
+                  />
+                )}
+                {errors['parentInfo.motherContactNumber'] && (
+                  <p className="text-sm text-red-500">{errors['parentInfo.motherContactNumber']}</p>
+                )}
               </div>
-            </RadioGroup>
-            {errors['parentInfo.motherEducationalAttainment'] && (
-              <p className="text-sm text-red-500">{errors['parentInfo.motherEducationalAttainment']}</p>
-            )}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="motherEmail">Email Address {showMotherEmail && '*'}</Label>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="motherNoEmail"
+                      checked={!showMotherEmail}
+                      onCheckedChange={(checked) => {
+                        setShowMotherEmail(!checked);
+                        onUpdate('motherHasEmail', !checked);
+                        if (checked) onUpdate('motherEmail', 'N/A');
+                      }}
+                    />
+                    <Label htmlFor="motherNoEmail" className="text-sm font-normal cursor-pointer">
+                      No Email
+                    </Label>
+                  </div>
+                </div>
+                {showMotherEmail ? (
+                  <Input
+                    id="motherEmail"
+                    type="email"
+                    value={parentInfo.motherEmail}
+                    onChange={(e) => onUpdate('motherEmail', e.target.value)}
+                    placeholder="mother@example.com"
+                  />
+                ) : (
+                  <Input
+                    value="No Email"
+                    disabled
+                    className="bg-gray-100"
+                  />
+                )}
+                {errors['parentInfo.motherEmail'] && (
+                  <p className="text-sm text-red-500">{errors['parentInfo.motherEmail']}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Highest Educational Attainment *</Label>
+              <RadioGroup
+                value={parentInfo.motherEducationalAttainment}
+                onValueChange={(value) => onUpdate('motherEducationalAttainment', value)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {EDUCATIONAL_ATTAINMENT_OPTIONS.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`mother-${option.value}`} />
+                      <Label htmlFor={`mother-${option.value}`} className="font-normal cursor-pointer">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+              {errors['parentInfo.motherEducationalAttainment'] && (
+                <p className="text-sm text-red-500">{errors['parentInfo.motherEducationalAttainment']}</p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Marital Status */}
         <div className="space-y-4">

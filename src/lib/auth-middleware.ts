@@ -181,7 +181,7 @@ export async function isAuthorizedOrOwner(
  */
 export async function requireRoleOrOwner(
   allowedRoles: Role[],
-  ownerId: string
+  ownerId?: string | null
 ) {
   const user = await requireAuth();
   
@@ -191,7 +191,7 @@ export async function requireRoleOrOwner(
   }
   
   // Check if user is the owner
-  if (user.id === ownerId) {
+  if (ownerId && user.id === ownerId) {
     return user;
   }
   

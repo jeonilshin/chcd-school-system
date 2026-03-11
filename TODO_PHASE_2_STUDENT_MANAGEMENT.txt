@@ -1,0 +1,41 @@
+===============================================
+TODO: COMPLETE PHASE 2 - STUDENT MANAGEMENT
+===============================================
+
+STATUS: Database models created, but implementation paused
+PRIORITY: Do this AFTER parent portal is complete
+
+WHAT'S DONE:
+✅ Database schema updated (Student and Class models)
+✅ Prisma client generated
+✅ Implementation plan documented in PHASE_2_IMPLEMENTATION.md
+
+WHAT NEEDS TO BE DONE:
+⏳ Run database migration: npx prisma migrate dev --name add_student_and_class_models
+⏳ Create API routes for students (/api/students)
+⏳ Create API routes for classes (/api/classes)
+⏳ Create API routes for admissions (/api/admissions)
+⏳ Update sidebar navigation to include Students and Classes
+⏳ Create students list page (/admin/students)
+⏳ Create student details page (/admin/students/[id])
+⏳ Create classes list page (/admin/classes)
+⏳ Create class details page (/admin/classes/[id])
+⏳ Create admissions page (/admin/admissions)
+
+FILES TO REFERENCE:
+- PHASE_2_IMPLEMENTATION.md - Full implementation details
+- SCHOOL_SYSTEM_ROADMAP.md - Overall roadmap
+- prisma/schema.prisma - Database models (Student, Class)
+
+NOTES:
+- Student ID format: STU-{YEAR}-{SEQUENTIAL} (e.g., STU-2026-0001)
+- Students are created from approved enrollments
+- One enrollment = One student (one-to-one relationship)
+- Class capacity should be enforced when assigning students
+
+WHEN TO DO THIS:
+After the parent portal is complete and tested.
+This will allow parents to see their children's information,
+and admins to manage the student records properly.
+
+===============================================

@@ -18,6 +18,7 @@ import { EnrollmentAgreementSection } from '@/components/enrollment-agreement-se
 type Sex = 'FEMALE' | 'MALE';
 type Citizenship = 'FILIPINO' | 'FOREIGNER';
 type StudentStatus = 'OLD_STUDENT' | 'NEW_STUDENT';
+type ParentAvailability = 'BOTH' | 'FATHER_ONLY' | 'MOTHER_ONLY' | 'SINGLE_PARENT';
 type EducationalAttainment = 
   | 'ELEMENTARY_GRADUATE'
   | 'HIGH_SCHOOL_GRADUATE'
@@ -59,27 +60,35 @@ interface PersonalInfo {
   religion: string;
   presentAddress: string;
   contactNumber: string;
+  hasContactNumber?: boolean;
   citizenship: Citizenship | '';
   citizenshipSpecification?: string;
 }
 
 interface ParentInfo {
+  parentAvailability?: ParentAvailability;
   fatherFullName: string;
   fatherOccupation?: string;
   fatherContactNumber: string;
   fatherEmail?: string;
+  fatherHasEmail?: boolean;
+  fatherHasContactNumber?: boolean;
   fatherEducationalAttainment: EducationalAttainment | '';
   motherFullName: string;
   motherOccupation?: string;
   motherContactNumber: string;
   motherEmail: string;
+  motherHasEmail?: boolean;
+  motherHasContactNumber?: boolean;
   motherEducationalAttainment: EducationalAttainment | '';
   maritalStatus: MaritalStatus[];
 }
 
 interface StudentHistory {
+  hasSiblings?: boolean;
   siblingsInformation?: string;
   totalLearnersInHousehold: string;
+  program?: string;
   lastSchoolPreschoolName: string;
   lastSchoolPreschoolAddress?: string;
   lastSchoolElementaryName: string;
@@ -123,6 +132,9 @@ interface EnrollmentFormProps {
 }
 
 export function EnrollmentForm({ onSubmit, initialData }: EnrollmentFormProps) {
+  const [showChildContact, setShowChildContact] = useState(
+    initialData?.personalInfo?.hasContactNumber !== false
+  );
   const [formData, setFormData] = useState<EnrollmentFormData>({
     schoolYear: initialData?.schoolYear || '',
     program: initialData?.program || '',
@@ -140,6 +152,7 @@ export function EnrollmentForm({ onSubmit, initialData }: EnrollmentFormProps) {
       religion: '',
       presentAddress: '',
       contactNumber: '',
+      hasContactNumber: true,
       citizenship: '',
       citizenshipSpecification: '',
       ...initialData?.personalInfo,
@@ -232,7 +245,8 @@ export function EnrollmentForm({ onSubmit, initialData }: EnrollmentFormProps) {
     if (!personalInfo.presentAddress) {
       newErrors.push({ field: 'personalInfo.presentAddress', message: 'Present address is required' });
     }
-    if (!personalInfo.contactNumber) {
+    // Only require contact number if user hasn't checked "Not Available"
+    if (personalInfo.hasContactNumber !== false && !personalInfo.contactNumber) {
       newErrors.push({ field: 'personalInfo.contactNumber', message: 'Contact number is required' });
     }
     if (!personalInfo.citizenship) {
@@ -347,21 +361,21 @@ export function EnrollmentForm({ onSubmit, initialData }: EnrollmentFormProps) {
     return errors.find(e => e.field === field)?.message;
   };
 
-  const updatePersonalInfo = (field: keyof PersonalInfo, value: string) => {
+  const updatePersonalInfo = (field: keyof PersonalInfo, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       personalInfo: { ...prev.personalInfo, [field]: value }
     }));
   };
 
-  const updateParentInfo = (field: keyof ParentInfo, value: string | MaritalStatus[]) => {
+  const updateParentInfo = (field: keyof ParentInfo, value: string | MaritalStatus[] | boolean) => {
     setFormData(prev => ({
       ...prev,
       parentInfo: { ...prev.parentInfo, [field]: value }
     }));
   };
 
-  const updateStudentHistory = (field: keyof StudentHistory, value: string) => {
+  const updateStudentHistory = (field: keyof StudentHistory, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       studentHistory: { ...prev.studentHistory, [field]: value }
@@ -667,12 +681,40 @@ export function EnrollmentForm({ onSubmit, initialData }: EnrollmentFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contactNumber">Contact Number *</Label>
-              <Input
-                id="contactNumber"
-                value={formData.personalInfo.contactNumber}
-                onChange={(e) => updatePersonalInfo('contactNumber', e.target.value)}
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="contactNumber">Contact Number {showChildContact && '*'}</Label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="childNoContact"
+                    checked={!showChildContact}
+                    onCheckedChange={(checked) => {
+                      const hasContact = !checked;
+                      setShowChildContact(hasContact);
+                      updatePersonalInfo('hasContactNumber', hasContact);
+                      if (checked) {
+                        updatePersonalInfo('contactNumber', 'N/A');
+                      }
+                    }}
+                  />
+                  <Label htmlFor="childNoContact" className="text-sm font-normal cursor-pointer">
+                    Not Available
+                  </Label>
+                </div>
+              </div>
+              {showChildContact ? (
+                <Input
+                  id="contactNumber"
+                  value={formData.personalInfo.contactNumber}
+                  onChange={(e) => updatePersonalInfo('contactNumber', e.target.value)}
+                  placeholder="+63 XXX XXX XXXX"
+                />
+              ) : (
+                <Input
+                  value="Not Available"
+                  disabled
+                  className="bg-gray-100"
+                />
+              )}
               {getFieldError('personalInfo.contactNumber') && (
                 <p className="text-sm text-red-500">{getFieldError('personalInfo.contactNumber')}</p>
               )}
@@ -727,6 +769,7 @@ export function EnrollmentForm({ onSubmit, initialData }: EnrollmentFormProps) {
         studentHistory={formData.studentHistory}
         onUpdate={updateStudentHistory}
         errors={Object.fromEntries(errors.map(e => [e.field, e.message]))}
+        program={formData.program}
       />
 
       {/* Student Skills */}

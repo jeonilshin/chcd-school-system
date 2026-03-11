@@ -151,27 +151,127 @@ model Student {
   
   Enrollment        Enrollment    @relation(fields: [enrollmentId], references: [id])
   Class             Class?        @relation(fields: [classId], references: [id])
+  Attendance        Attendance[]
+  Grade             Grade[]
+  Bill              Bill[]
 
   @@index([studentId])
   @@index([classId])
   @@index([status])
 }
 
+model Announcement {
+  id          String              @id
+  title       String
+  content     String              @db.Text
+  category    AnnouncementCategory
+  priority    AnnouncementPriority @default(NORMAL)
+  targetAudience String[]         // ["PARENT", "STUDENT", "ALL"]
+  publishDate DateTime            @default(now())
+  expiryDate  DateTime?
+  createdBy   String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([publishDate])
+  @@index([priority])
+}
+
+model Attendance {
+  id          String            @id
+  studentId   String
+  date        DateTime
+  status      AttendanceStatus
+  timeIn      String?
+  timeOut     String?
+  remarks     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  Student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([date])
+  @@index([status])
+}
+
+model Grade {
+  id          String    @id
+  studentId   String
+  subject     String
+  quarter     String    // "First Quarter", "Second Quarter", etc.
+  grade       Float
+  remarks     String?
+  teacher     String?
+  schoolYear  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  Student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subject, quarter, schoolYear])
+  @@index([studentId])
+  @@index([schoolYear])
+}
+
+model Bill {
+  id              String        @id
+  studentId       String
+  invoiceNumber   String        @unique
+  description     String
+  amount          Float
+  dueDate         DateTime
+  status          BillStatus    @default(PENDING)
+  paidDate        DateTime?
+  paidAmount      Float?
+  paymentMethod   String?
+  receiptNumber   String?
+  schoolYear      String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  Student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model ClassSchedule {
+  id          String    @id
+  classId     String
+  dayOfWeek   DayOfWeek
+  subject     String
+  startTime   String    // "08:00"
+  endTime     String    // "09:00"
+  teacher     String?
+  room        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  Class       Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, dayOfWeek, startTime])
+  @@index([classId])
+}
+
 model Class {
-  id              String    @id
+  id              String          @id
   name            String
   program         String
   schoolYear      String
   section         String?
-  capacity        Int       @default(30)
+  capacity        Int             @default(30)
   teacherId       String?
   roomNumber      String?
   schedule        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   
-  Teacher         Teacher?  @relation("ClassTeacher", fields: [teacherId], references: [id])
+  Teacher         Teacher?        @relation("ClassTeacher", fields: [teacherId], references: [id])
   Students        Student[]
+  ClassSchedule   ClassSchedule[]
 
   @@unique([name, schoolYear])
   @@index([program])
@@ -271,4 +371,43 @@ enum StudentStatus {
 enum WithdrawalPolicyAcceptance {
   YES_AGREED
   NO_DISAGREE
+}
+
+enum AnnouncementCategory {
+  ACADEMIC
+  EVENT
+  HEALTH
+  LIBRARY
+  GENERAL
+  EMERGENCY
+}
+
+enum AnnouncementPriority {
+  HIGH
+  NORMAL
+  LOW
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }

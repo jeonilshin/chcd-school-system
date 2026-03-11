@@ -22,7 +22,7 @@ const getRoleBasedRedirect = (role: string): string => {
     case 'PRINCIPAL':
       return '/admin/dashboard';
     case 'PARENT':
-      return '/parent/coming-soon';
+      return '/parent/dashboard';
     default:
       return '/';
   }

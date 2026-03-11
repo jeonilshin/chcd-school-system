@@ -30,6 +30,7 @@ export default function EnrollPage() {
   const [existingEnrollments, setExistingEnrollments] = useState<EnrollmentInfo[]>([]);
   const [hasAccount, setHasAccount] = useState(false);
   const [hasSavedData, setHasSavedData] = useState(false);
+  const [showChildContact, setShowChildContact] = useState(true);
   
   // Form data
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
@@ -47,6 +48,7 @@ export default function EnrollPage() {
     religion: '',
     presentAddress: '',
     contactNumber: '',
+    hasContactNumber: true,
     citizenship: '',
     citizenshipSpecification: '',
   });
@@ -195,7 +197,7 @@ export default function EnrollPage() {
     }
   };
 
-  const handlePersonalInfoChange = (field: string, value: string) => {
+  const handlePersonalInfoChange = (field: string, value: string | boolean) => {
     setPersonalInfo(prev => ({ ...prev, [field]: value }));
   };
 
@@ -1237,14 +1239,46 @@ export default function EnrollPage() {
 
                   {/* Contact Number */}
                   <div className="space-y-2">
-                    <Label htmlFor="contactNumber" className="text-base font-semibold">Contact Number *</Label>
-                    <Input
-                      id="contactNumber"
-                      value={personalInfo.contactNumber}
-                      onChange={(e) => handlePersonalInfoChange('contactNumber', e.target.value)}
-                      className="h-12 border-2 rounded-xl"
-                      required
-                    />
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="contactNumber" className="text-base font-semibold">
+                        Contact Number {showChildContact && '*'}
+                      </Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="childNoContact"
+                          checked={!showChildContact}
+                          onChange={(e) => {
+                            const hasContact = !e.target.checked;
+                            setShowChildContact(hasContact);
+                            handlePersonalInfoChange('hasContactNumber', hasContact);
+                            if (e.target.checked) {
+                              handlePersonalInfoChange('contactNumber', 'N/A');
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor="childNoContact" className="text-sm font-normal cursor-pointer">
+                          Not Available
+                        </Label>
+                      </div>
+                    </div>
+                    {showChildContact ? (
+                      <Input
+                        id="contactNumber"
+                        value={personalInfo.contactNumber}
+                        onChange={(e) => handlePersonalInfoChange('contactNumber', e.target.value)}
+                        className="h-12 border-2 rounded-xl"
+                        placeholder="+63 XXX XXX XXXX"
+                        required
+                      />
+                    ) : (
+                      <Input
+                        value="Not Available"
+                        disabled
+                        className="h-12 border-2 rounded-xl bg-gray-100"
+                      />
+                    )}
                   </div>
 
                   {/* Present Address */}

@@ -54,7 +54,7 @@ export function AdmissionsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAdmitModal, setShowAdmitModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
-  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('none');
   const [isAdmitting, setIsAdmitting] = useState(false);
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export function AdmissionsList() {
 
   const handleAdmitClick = (enrollment: Enrollment) => {
     setSelectedEnrollment(enrollment);
-    setSelectedClassId('');
+    setSelectedClassId('none');
     setShowAdmitModal(true);
   };
 
@@ -100,7 +100,7 @@ export function AdmissionsList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           enrollmentId: selectedEnrollment.id,
-          classId: selectedClassId || null,
+          classId: selectedClassId === 'none' ? null : selectedClassId,
         }),
       });
 
@@ -255,7 +255,7 @@ export function AdmissionsList() {
                     <SelectValue placeholder="Select a class" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No class (assign later)</SelectItem>
+                    <SelectItem value="none">No class (assign later)</SelectItem>
                     {getAvailableClasses().map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} {cls.section && `- ${cls.section}`} ({cls._count.Students}/{cls.capacity})

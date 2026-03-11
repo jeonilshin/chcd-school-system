@@ -195,7 +195,19 @@ export async function DELETE(
       // Continue anyway - database cleanup is more important
     }
     
-    // Step 2: Delete enrollment from database
+    // Step 2: Delete associated Student record if exists
+    // This must be done before deleting the enrollment due to foreign key constraint
+    const existingStudent = await prisma.student.findUnique({
+      where: { enrollmentId: id }
+    });
+    
+    if (existingStudent) {
+      await prisma.student.delete({
+        where: { enrollmentId: id }
+      });
+    }
+    
+    // Step 3: Delete enrollment from database
     // This will cascade delete all associated documents (Requirement 10.4)
     await prisma.enrollment.delete({ 
       where: { id } 
