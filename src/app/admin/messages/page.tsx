@@ -1,14 +1,14 @@
 'use client';
 
 import { ProtectedRoute } from '@/components/protected-route';
+import { AdminMessaging } from '@/components/admin-messaging';
 import { AdminLayout } from '@/components/admin-layout';
-import { AttendanceManagement } from '@/components/attendance-management';
 
-export default function AttendancePage() {
+export default function AdminMessagesPage() {
   return (
     <ProtectedRoute allowedRoles={['ADMIN', 'PRINCIPAL']}>
       <AdminLayout>
-        <AttendanceManagement />
+        <AdminMessaging />
       </AdminLayout>
     </ProtectedRoute>
   );

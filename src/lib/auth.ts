@@ -18,18 +18,24 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log('Missing credentials');
           return null;
         }
 
         try {
+          console.log('Attempting to authenticate user:', credentials.email);
+          
           // Find user by email
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           });
 
           if (!user) {
+            console.log('User not found:', credentials.email);
             return null;
           }
+
+          console.log('User found:', { id: user.id, email: user.email, role: user.role });
 
           // Verify password
           const isPasswordValid = await compare(
@@ -38,8 +44,11 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
+            console.log('Invalid password for user:', credentials.email);
             return null;
           }
+
+          console.log('Authentication successful for:', credentials.email);
 
           // Return user object (password excluded)
           return {
@@ -59,6 +68,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       // Add role to token on sign in
       if (user) {
+        console.log('JWT callback - adding user to token:', user);
         token.id = user.id;
         token.role = user.role;
       }
@@ -66,7 +76,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // Add user id and role to session
-      if (session.user) {
+      if (session.user && token) {
+        console.log('Session callback - adding token to session:', token);
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
       }
@@ -78,8 +89,10 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 };
 
 

@@ -5,12 +5,12 @@ import { Role } from '@prisma/client';
 
 /**
  * GET /api/teachers
- * Get all teachers (Principal only)
+ * Get all teachers (Admin and Principal)
  */
 export async function GET(req: NextRequest) {
   try {
-    // Only PRINCIPAL can manage teachers
-    await requireRole([Role.PRINCIPAL]);
+    // Allow ADMIN and PRINCIPAL to view teachers
+    await requireRole([Role.ADMIN, Role.PRINCIPAL]);
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search');
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json({ teachers });
+    return NextResponse.json(teachers);
   } catch (error: any) {
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: error.message }, { status: 401 });

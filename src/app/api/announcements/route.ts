@@ -1,30 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-/**
- * GET /api/announcements
- * Get all announcements (Admin/Principal only)
- */
-export async function GET(request: NextRequest) {
+// Get announcements
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
 
-    if (!session || !['ADMIN', 'PRINCIPAL'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const announcements = await prisma.announcement.findMany({
-      orderBy: {
-        publishDate: 'desc',
-      },
-    });
+    if (session.user.role === 'PARENT') {
+      // Parents see public announcements and class-specific ones
+      const enrollments = await prisma.enrollment.findMany({
+        where: { userId: session.user.id, status: 'APPROVED' },
+        include: {
+          Student: {
+            select: { classId: true },
+          },
+        },
+      });
 
-    return NextResponse.json({ announcements });
+      const classIds = enrollments
+        .map((e) => e.Student?.classId)
+        .filter(Boolean) as string[];
+
+      const announcements = await prisma.announcement.findMany({
+        where: {
+          OR: [
+            { isPublic: true },
+            { id: { in: classIds } },
+          ],
+          publishDate: { lte: new Date() },
+          OR: [
+            { expiryDate: null },
+            { expiryDate: { gte: new Date() } },
+          ],
+        },
+        orderBy: [
+          { priority: 'desc' },
+          { publishDate: 'desc' },
+        ],
+      });
+
+      return NextResponse.json(announcements);
+    } else {
+      // Teachers and admins see all announcements
+      const announcements = await prisma.announcement.findMany({
+        orderBy: [
+          { priority: 'desc' },
+          { publishDate: 'desc' },
+        ],
+      });
+
+      return NextResponse.json(announcements);
+    }
   } catch (error) {
     console.error('Error fetching announcements:', error);
     return NextResponse.json(
@@ -34,49 +65,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * POST /api/announcements
- * Create a new announcement (Admin/Principal only)
- */
+// Create announcement (teachers and admins only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
 
-    if (!session || !['ADMIN', 'PRINCIPAL'].includes(session.user.role)) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN' && session.user.role !== 'PRINCIPAL')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { title, content, category, priority, targetAudience, expiryDate } = body;
+    const { title, content, category, priority, isPublic, classId, expiryDate } = body;
 
-    // Validation
     if (!title || !content || !category) {
       return NextResponse.json(
-        { error: 'Title, content, and category are required' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Generate ID
-    const id = `ann_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
     const announcement = await prisma.announcement.create({
       data: {
-        id,
+        id: `ann-${Date.now()}`,
         title,
         content,
         category,
         priority: priority || 'NORMAL',
-        targetAudience: targetAudience || ['ALL'],
-        expiryDate: expiryDate ? new Date(expiryDate) : null,
-        createdBy: session.user.email,
+        isPublic: isPublic || false,
+        targetAudience: ['PARENT', 'STUDENT'],
+        authorId: session.user.id,
+        authorRole: session.user.role,
+        ...(classId && { classId }),
+        ...(expiryDate && { expiryDate: new Date(expiryDate) }),
+        createdBy: session.user.id,
       },
     });
 
-    return NextResponse.json({ announcement }, { status: 201 });
+    return NextResponse.json(announcement);
   } catch (error) {
     console.error('Error creating announcement:', error);
     return NextResponse.json(
