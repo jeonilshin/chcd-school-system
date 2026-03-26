@@ -6,7 +6,7 @@ import { AdminLayout } from '@/components/admin-layout';
 
 export default function TeachersPage() {
   return (
-    <ProtectedRoute allowedRoles={['PRINCIPAL']}>
+    <ProtectedRoute allowedRoles={['ADMIN', 'PRINCIPAL']}>
       <AdminLayout>
         <TeachersManagement />
       </AdminLayout>
