@@ -1,13 +1,12 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { EnrollmentDetail } from '@/components/enrollment-detail';
 import { ProtectedRoute } from '@/components/protected-route';
 import { AdminLayout } from '@/components/admin-layout';
 
 export default function EnrollmentDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const enrollmentId = params.id as string;
 
   const handleApprove = async (id: string) => {

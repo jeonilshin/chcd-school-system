@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const pendingAdmissions = await prisma.enrollment.findMany({
       where: {
         status: 'APPROVED',
-        Student: null, // No student record exists
+        Student: { is: null }, // No student record exists
       },
       orderBy: { updatedAt: 'desc' },
     });
