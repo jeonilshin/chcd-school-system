@@ -9,7 +9,6 @@ import {
   StudentSkills,
   EnrollmentAgreement,
   DocumentType,
-  StudentStatus,
 } from '@/types/enrollment';
 
 describe('EnrollmentValidator', () => {

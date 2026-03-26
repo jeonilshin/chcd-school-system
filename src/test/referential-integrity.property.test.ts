@@ -14,7 +14,6 @@ import { DELETE } from '@/app/api/enrollments/[id]/route';
 import { NextRequest } from 'next/server';
 import { requireRoleOrOwner } from '@/lib/auth-middleware';
 import { Role } from '@prisma/client';
-import { FileUploadHandler } from '@/lib/file-upload-handler';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -65,7 +64,7 @@ describe('Referential Integrity Property Tests', () => {
           recursive: true,
           force: true,
         });
-      } catch (error) {
+      } catch {
         // Ignore cleanup errors
       }
     }
@@ -123,7 +122,6 @@ describe('Referential Integrity Property Tests', () => {
           testEnrollmentIds.push(enrollmentId);
 
           // Create test files on filesystem
-          const fileHandler = new FileUploadHandler();
           const createdFiles: string[] = [];
 
           // Create profile picture directory and file

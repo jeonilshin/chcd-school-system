@@ -9,7 +9,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FileRetrievalHandler } from '@/lib/file-retrieval-handler';
 import { Role } from '@prisma/client';
 import fs from 'fs/promises';
-import path from 'path';
 
 // Mock dependencies
 vi.mock('@/lib/auth-middleware', () => ({

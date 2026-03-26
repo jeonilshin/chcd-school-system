@@ -40,11 +40,6 @@ describe('EnrollmentValidator - Property-Based Tests', () => {
   const sexGen = fc.constantFrom<Sex>('FEMALE', 'MALE');
 
   /**
-   * Generator for valid citizenship values
-   */
-  const citizenshipGen = fc.constantFrom<Citizenship>('FILIPINO', 'FOREIGNER');
-
-  /**
    * Generator for valid ages (preschool age range)
    */
   const ageGen = fc.integer({ min: 2, max: 6 });
@@ -113,17 +108,6 @@ describe('EnrollmentValidator - Property-Based Tests', () => {
     'presentAddress',
     'contactNumber',
     'citizenship'
-  );
-
-  /**
-   * Generator for invalid date strings
-   */
-  const invalidDateGen = fc.oneof(
-    fc.constant('invalid-date'),
-    fc.constant('2024-02-30'), // Invalid day
-    fc.constant('2024-13-01'), // Invalid month
-    fc.constant('not a date'),
-    fc.constant(''),
   );
 
   // ============================================================================
@@ -510,7 +494,7 @@ describe('EnrollmentValidator - Property-Based Tests', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 2, max: 8 }),
-        (numFieldsToInvalidate) => {
+        (_numFieldsToInvalidate) => {
           // Create completely invalid data
           const invalidData: Partial<PersonalInfo> = {};
 

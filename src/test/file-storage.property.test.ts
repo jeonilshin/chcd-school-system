@@ -29,7 +29,6 @@ vi.mock('fs/promises', () => ({
 
 describe('File Storage Property Tests', () => {
   let handler: FileUploadHandler;
-  const uploadBaseDir = path.join(process.cwd(), 'public', 'uploads');
   const testEnrollmentIds: string[] = [];
   const fileStorage = new Map<string, Buffer>(); // In-memory storage for mocked files
 
